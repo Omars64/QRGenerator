@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Banking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-university"></i> Monopoly Bank</h1>
+        
+        <!-- Player Management Section -->
+        <div class="section">
+            <h2><i class="fas fa-users"></i> Player Management</h2>
+            
+            <!-- Add Player -->
+            <div class="form-group">
+                <h3>Add New Player</h3>
+                <form method="POST" action="/add_player" class="inline-form">
+                    <input type="text" name="name" placeholder="Enter player name" required>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Player ($1,500)
+                    </button>
+                </form>
+            </div>
+
+            <!-- Remove Player -->
+            {% if players %}
+            <div class="form-group">
+                <h3>Remove Player</h3>
+                <form method="POST" action="/remove_player" class="inline-form">
+                    <select name="name" required>
+                        <option value="">Select player to remove</option>
+                        {% for player in players %}
+                        <option value="{{ player }}">{{ player }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-danger">
+                        <i class="fas fa-user-minus"></i> Remove Player
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Current Players Section -->
+        {% if players %}
+        <div class="section">
+            <h2><i class="fas fa-wallet"></i> Current Players</h2>
+            <div class="players-grid">
+                {% for player, balance in players.items() %}
+                <div class="player-card">
+                    <div class="player-name">{{ player }}</div>
+                    <div class="player-balance">${{ "{:,}".format(balance) }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Banking Operations Section -->
+        <div class="section">
+            <h2><i class="fas fa-exchange-alt"></i> Banking Operations</h2>
+            
+            <!-- Player to Player Transfer -->
+            <div class="form-group">
+                <h3>Player to Player Transfer</h3>
+                <form method="POST" action="/transfer" class="banking-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>From Player:</label>
+                            <select name="from_player" required>
+                                <option value="">Select sender</option>
+                                {% for player in players %}
+                                <option value="{{ player }}">{{ player }} (${{ "{:,}".format(players[player]) }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label>To Player:</label>
+                            <select name="to_player" required>
+                                <option value="">Select recipient</option>
+                                {% for player in players %}
+                                <option value="{{ player }}">{{ player }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Amount:</label>
+                            <input type="number" name="amount" min="1" placeholder="Enter amount" required>
+                        </div>
+                        <div class="form-col">
+                            <label>Description (optional):</label>
+                            <input type="text" name="description" placeholder="e.g., Rent payment">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i> Transfer Money
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bank Transactions -->
+            <div class="form-group">
+                <h3>Bank Transactions</h3>
+                <form method="POST" action="/bank_payment" class="banking-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Player:</label>
+                            <select name="player" required>
+                                <option value="">Select player</option>
+                                {% for player in players %}
+                                <option value="{{ player }}">{{ player }} (${{ "{:,}".format(players[player]) }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label>Transaction Type:</label>
+                            <select name="transaction_type" required>
+                                <option value="receive">Receive from Bank</option>
+                                <option value="pay">Pay to Bank</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Amount:</label>
+                            <input type="number" name="amount" min="1" placeholder="Enter amount" required>
+                        </div>
+                        <div class="form-col">
+                            <label>Description (optional):</label>
+                            <input type="text" name="description" placeholder="e.g., Salary, Tax, GO">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-university"></i> Process Bank Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Transaction History Section -->
+        {% if transactions %}
+        <div class="section">
+            <h2><i class="fas fa-history"></i> Recent Transactions</h2>
+            <div class="transactions-list">
+                {% for transaction in transactions %}
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <span class="transaction-type">{{ transaction.type }}</span>
+                        <span class="transaction-time">{{ transaction.timestamp }}</span>
+                    </div>
+                    <div class="transaction-details">
+                        <span class="transaction-flow">
+                            {{ transaction.from_player }} 
+                            <i class="fas fa-arrow-right"></i> 
+                            {{ transaction.to_player }}
+                        </span>
+                        <span class="transaction-amount">${{ "{:,}".format(transaction.amount) }}</span>
+                    </div>
+                    {% if transaction.description %}
+                    <div class="transaction-description">{{ transaction.description }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Game Controls -->
+        <div class="section">
+            <h2><i class="fas fa-cog"></i> Game Controls</h2>
+            <form method="POST" action="/reset_game" onsubmit="return confirm('Are you sure you want to reset the entire game? This will remove all players and transactions.')">
+                <button type="submit" class="btn-danger">
+                    <i class="fas fa-redo"></i> Reset Game
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Prevent selecting same player in transfer form
+        document.addEventListener('DOMContentLoaded', function() {
+            const transferForm = document.querySelector('form[action="/transfer"]');
+            if (transferForm) {
+                const fromSelect = transferForm.querySelector('select[name="from_player"]');
+                const toSelect = transferForm.querySelector('select[name="to_player"]');
+                
+                function updateOptions() {
+                    const fromValue = fromSelect.value;
+                    const toValue = toSelect.value;
+                    
+                    // Disable selected option in the other dropdown
+                    Array.from(toSelect.options).forEach(option => {
+                        option.disabled = option.value === fromValue && option.value !== '';
+                    });
+                    
+                    Array.from(fromSelect.options).forEach(option => {
+                        option.disabled = option.value === toValue && option.value !== '';
+                    });
+                }
+                
+                fromSelect.addEventListener('change', updateOptions);
+                toSelect.addEventListener('change', updateOptions);
+            }
+        });
+    </script>
+</body>
+</html>
